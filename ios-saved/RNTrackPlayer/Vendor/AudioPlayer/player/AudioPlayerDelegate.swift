@@ -73,21 +73,6 @@ protocol AudioPlayerDelegate: class {
     ///   - range: The time range that the audio player loaded.
     ///   - item: Current item.
     func audioPlayer(_ audioPlayer: AudioPlayer, didLoad range: TimeRange, for item: Track)
-
-    /// Fix for brendons bug
-    /// This method gets called at the successful conclusion of establishing a new track as the currentItem
-    /// which is signalled by AVPlayer.status == readyToPlay. I would like to call this action "loadingAtrack"
-    /// and report the completion of the action as didFinishLoadingTrack track:Track.
-    ///
-    /// But not ready to go there yet
-    ///
-    /// This is not really captured in the PlayerEventPeoducer.PlayerEvent repetoire so this is being handled
-    /// "outside normal channels"
-    ///
-    ///
-    func audioPlayer(_ audioPlayer: AudioPlayer, didBecomeReadyToPlayFor item: Track)
-    func audioPlayer(_ audioPlayer: AudioPlayer)
-    func audioPlayer(_ audioPlayer: AudioPlayer, didCompleteSeekWithOutcome success: Bool)
 }
 
 extension AudioPlayerDelegate {
@@ -103,7 +88,4 @@ extension AudioPlayerDelegate {
     func audioPlayer(_ audioPlayer: AudioPlayer, didUpdateEmptyMetadataOn item: Track, withData data: Metadata) {}
 
     func audioPlayer(_ audioPlayer: AudioPlayer, didLoad range: TimeRange, for item: Track) {}
-
-//    func audioPlayer(_ audioPlayer: AudioPlayer, didBecomeReadyToPlayFor item: Track) {}
-
 }

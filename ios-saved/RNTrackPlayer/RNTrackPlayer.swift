@@ -12,7 +12,6 @@ import AVFoundation
 
 @objc(RNTrackPlayer)
 class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
-  
     private lazy var mediaWrapper: MediaWrapper = {
         let wrapper = MediaWrapper()
         wrapper.delegate = self
@@ -49,11 +48,6 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         sendEvent(withName: "playback-error", body: ["error": error.localizedDescription])
     }
     
-    // RB signals seek completion with the same bool value that AVPlayer returned
-    func playerSeekCompleted(success : Bool) {
-        sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
-    }
-
     private let isTesting = { () -> Bool in
         if let _ = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] {
             return true
@@ -102,8 +96,6 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             "playback-error",
             "playback-track-changed",
             
-            "playback-seek-complete",
-
             "remote-stop",
             "remote-pause",
             "remote-play",
@@ -137,16 +129,22 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     @objc(updateOptions:)
     func update(options: [String: Any]) {
         let remoteCenter = MPRemoteCommandCenter.shared()
-        let castedCapabilities = (options["capabilities"] as? [String])
-        let capabilities = castedCapabilities?.flatMap { Capability(rawValue: $0) } ?? []
+        let rawCapabilites = options["capabilities"]
+        var capabilities = [String]()
         
-        let enableStop = capabilities.contains(.stop)
-        let enablePause = capabilities.contains(.pause)
-        let enablePlay = capabilities.contains(.play)
-        let enablePlayNext = capabilities.contains(.next)
-        let enablePlayPrevious = capabilities.contains(.previous)
-        let enableSkipForward = capabilities.contains(.jumpForward)
-        let enableSkipBackward = capabilities.contains(.jumpBackward)
+        if (rawCapabilites != nil)
+        {
+            let castedCapabilities = rawCapabilites as! [Any]
+            capabilities = castedCapabilities.flatMap { $0 as? String }
+        }
+        
+        let enableStop = capabilities.contains("stop")
+        let enablePause = capabilities.contains("pause")
+        let enablePlay = capabilities.contains("play")
+        let enablePlayNext = capabilities.contains("next")
+        let enablePlayPrevious = capabilities.contains("previous")
+        let enableSkipForward = capabilities.contains("jumpForward")
+        let enableSkipBackward = capabilities.contains("jumpBackward")
         
         toggleRemoteHandler(command: remoteCenter.stopCommand, selector: #selector(remoteSentStop), enabled: enableStop)
         toggleRemoteHandler(command: remoteCenter.pauseCommand, selector: #selector(remoteSentPause), enabled: enablePause)
@@ -163,7 +161,7 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     }
     
     @objc(add:before:resolver:rejecter:)
-    func add(trackDicts: [[String: Any]], before trackId: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func add(trackDicts: [[String: Any]], before trackId: String?, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         if let trackId = trackId, !mediaWrapper.queueContainsTrack(trackId: trackId) {
             reject("track_not_in_queue", "Given track ID was not found in queue", nil)
             return
@@ -180,14 +178,8 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         }
         
         print("Adding tracks:", tracks)
-        mediaWrapper.addTracks(tracks, before: trackId, callback: {[resolve, reject] (success: Bool, errorMsg: String) ->Void  in
-          if(success) {
-            resolve(NSNull.self)
-          } else {
-            reject("call to add TRack failed", errorMsg, nil)
-          }
-        })
-//        resolve(NSNull())
+        mediaWrapper.addTracks(tracks, before: trackId)
+        resolve(NSNull())
     }
     
     @objc(remove:resolver:rejecter:)
@@ -205,58 +197,35 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     }
     
     @objc(skip:resolver:rejecter:)
-    func skip(to trackId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func skip(to trackId: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         if !mediaWrapper.queueContainsTrack(trackId: trackId) {
             reject("track_not_in_queue", "Given track ID was not found in queue", nil)
             return
         }
         
         print("Skipping to track:", trackId)
-        mediaWrapper.skipToTrack(id: trackId, callback: {[resolve, reject](_ success:Bool, _ errorMsg )->Void in
-            if(success) {
-                resolve(NSNull())
-            } else {
-                reject("skip_error", errorMsg, nil)
-            }
-        })
+        mediaWrapper.skipToTrack(id: trackId)
+        resolve(NSNull())
     }
     
-    ///
-    /// Skip to the next track in the queue and either play it or pause it depending on what the current track is doing.
-    /// If there is no current track it will be paused.
-    ///
-    /// when resolve is called the new track is ready to play
-    /// rejectr will be called with three args (errCode, errMsg, errorObj or nil) if the request fails
-    ///		and this includes if there is no next track - that is if we are at the end of the queue
     @objc(skipToNext:rejecter:)
-    func skipToNext(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func skipToNext(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Skipping to next track")
-        mediaWrapper.skipToNext(callback: {[resolve, reject](_ success:Bool, _ errorMsg )->Void in
-            if(success) {
-                resolve(NSNull())
-            } else {
-                reject("skip_to_next_error", errorMsg, nil)
-            }
-        })
+        if (mediaWrapper.playNext()) {
+            resolve(NSNull())
+        } else {
+            reject("queue_exhausted", "There is no tracks left to play", nil)
+        }
     }
     
-    ///
-    /// Skip to the previous track in the queue and either play it or pause it depending on what the current track is doing.
-    /// If there is no current track it will be paused.
-    ///
-    /// when resolve is called the new track is ready to play
-    /// rejectr will be called with three args (errCode, errMsg, errorObj or nil) if the request fails
-    ///        and this includes if there is no previous track - that is if we are at the beginning of the queue
     @objc(skipToPrevious:rejecter:)
-    func skipToPrevious(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    func skipToPrevious(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Skipping to next track")
-        mediaWrapper.skipToPrevious(callback: {[resolve, reject](_ success:Bool, _ errorMsg )->Void in
-            if(success) {
-                resolve(NSNull())
-            } else {
-                reject("skip_to_next_error", errorMsg, nil)
-            }
-        })
+        if (mediaWrapper.playPrevious()) {
+            resolve(NSNull())
+        } else {
+            reject("no_previous_track", "There is no previous track", nil)
+        }
     }
     
     @objc(reset)
@@ -270,13 +239,7 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         print("Starting/Resuming playback")
         mediaWrapper.play()
     }
-
-    @objc(resume)
-    func resume() {
-        print("Starting/Resuming resume playback")
-//        mediaWrapper.resume()
-    }
-
+    
     @objc(pause)
     func pause() {
         print("Pausing playback")
@@ -410,12 +373,4 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         
         sendEvent(withName: "remote-pause", body: nil)
     }
-  
-    func playbackSeekCompleted(success: Bool) {
-      NSLog("got here")
-      sendEvent(withName : "playback-seek-complete", body: nil)
-    }
-
-  
-  
 }

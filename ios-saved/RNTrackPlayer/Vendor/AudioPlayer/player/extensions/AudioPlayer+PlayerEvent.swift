@@ -5,8 +5,6 @@
 //  Created by Kevin DELANNOY on 03/04/16.
 //  Copyright © 2016 Kevin Delannoy. All rights reserved.
 //
-import Foundation
-import AVFoundation
 
 extension AudioPlayer {
     /// Handles player events.
@@ -22,24 +20,10 @@ extension AudioPlayer {
                 // the item before it was finished while offline (likely also due to connection loss).
                 stateWhenConnectionLost = .playing
                 state = .waitingForConnection
-                if isLoadingTrack {
-                    isLoadingTrack = false
-                    if let cb = loadingTrackCompletionCallback {
-                        loadingTrackCompletionCallback = nil
-                        cb(false, "internet connection or ended early error")
-                    }
-                }
             } else if let error = error {
                 // Some unrecoverable error occured while playing, so we set the state
                 // to a failed state and let the retry handler try again if it's enabled.
                 state = .failed(.foundationError(error))
-                if isLoadingTrack {
-                    isLoadingTrack = false
-                    if let cb = loadingTrackCompletionCallback {
-                        loadingTrackCompletionCallback = nil
-                        cb(false, "some unrecoverable error")
-                    }
-                }
             } else {
                 if let currentItem = currentItem {
                     delegate?.audioPlayer(self, didFinishPlaying: currentItem, at: currentItemProgression)
@@ -107,15 +91,6 @@ extension AudioPlayer {
 
         case .readyToPlay:
             //There is enough data in the buffer
-            if isLoadingTrack && (player!.status == AVPlayerStatus.readyToPlay) {
-                isLoadingTrack = false
-                reportAVPlayerReady()
-                guard let cb = loadingTrackCompletionCallback else {
-                    return
-                }
-                cb(true, "")
-                return
-            }
             if shouldResumePlaying {
                 stateBeforeBuffering = nil
                 state = .playing

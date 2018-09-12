@@ -142,19 +142,12 @@ extension AudioPlayer {
               toleranceBefore: CMTime = kCMTimePositiveInfinity,
               toleranceAfter: CMTime = kCMTimePositiveInfinity,
               completionHandler: ((Bool) -> Void)?) {
-        guard let p = player else {
-            assert(false, "player should not be nil if we get to this place")
-        }
         guard let completionHandler = completionHandler else {
-            player?.seek(to: CMTime(timeInterval: time), toleranceBefore: toleranceBefore, toleranceAfter: toleranceAfter,
-                completionHandler: { [weak self] finished in
-                    self?.updateNowPlayingInfoCenter()
-                    self?.reportSeekCompleted(finished)
-                }
-            )
+            player?.seek(to: CMTime(timeInterval: time), toleranceBefore: toleranceBefore,
+                         toleranceAfter: toleranceAfter)
+            updateNowPlayingInfoCenter()
             return
         }
-        // only seek if the avplayer is ready
         guard player?.currentItem?.status == .readyToPlay else {
             completionHandler(false)
             return
@@ -163,8 +156,6 @@ extension AudioPlayer {
                      completionHandler: { [weak self] finished in
                         completionHandler(finished)
                         self?.updateNowPlayingInfoCenter()
-                        self?.reportSeekCompleted(finished)
-                    }
-        )
+        })
     }
 }

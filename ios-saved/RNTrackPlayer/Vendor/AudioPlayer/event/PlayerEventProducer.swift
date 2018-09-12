@@ -218,7 +218,7 @@ class PlayerEventProducer: NSObject, EventProducer {
 
             case "status" where p.status == .readyToPlay:
                 eventListener?.onEvent(PlayerEvent.readyToPlay, generetedBy: self)
-                
+
             case "currentItem.loadedTimeRanges":
                 if let range = currentItem.loadedTimeRanges.last?.timeRangeValue {
                     eventListener?.onEvent(

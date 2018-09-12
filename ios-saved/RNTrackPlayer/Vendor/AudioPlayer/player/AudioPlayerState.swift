@@ -33,10 +33,6 @@ public enum AudioPlayerState {
     case waitingForConnection
     case failed(AudioPlayerError)
 
-    var description : String
-    {
-        return String(describing: self)
-    }
     /// A boolean value indicating is self = `buffering`.
     var isBuffering: Bool {
         if case .buffering = self {
