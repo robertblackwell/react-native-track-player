@@ -50,6 +50,15 @@ RCT_EXTERN_METHOD(stop);
 
 RCT_EXTERN_METHOD(seekTo:(double)time);
 
+RCT_EXTERN_METHOD(seekToPromise:(double)time
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
+
+//    @objc(seekToPromise:resolver:rejecter:)
+
+RCT_EXTERN_METHOD(jumpTo:(double)time);
+
+
 RCT_EXTERN_METHOD(setVolume:(float)volume);
 
 RCT_EXTERN_METHOD(getVolume:(RCTPromiseResolveBlock)resolve

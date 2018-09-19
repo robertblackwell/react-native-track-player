@@ -382,6 +382,27 @@ class MediaWrapper: AudioPlayerDelegate {
         self.player.seek(to: time)
     }
     
+    /**
+    * A version of seek that waits till the seek is done or has failed and then signals the caller of the outcome
+    * via a callback.
+    */
+    func seekPromise(to time: Double, callback cb : @escaping (_ success:Bool, _ errorMsg: String) -> Void) {
+        self.player.seek(
+            to: time,
+            byAdaptingTimeToFitSeekableRanges: false,
+            toleranceBefore: kCMTimePositiveInfinity,
+            toleranceAfter: kCMTimePositiveInfinity,
+            completionHandler: {[cb](success: Bool) -> Void in
+            print("seekPromise callback bool: \(success) \n")
+            if success {
+                 cb(true, "");
+             } else {
+            	cb(false, "Seek failed")
+            }
+        })
+
+    }
+    
     func reset() {
         rate = 1
         queue.removeAll()

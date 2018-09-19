@@ -119,6 +119,7 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     
     @objc(setupPlayer:resolver:rejecter:)
     func setupPlayer(config: [String: Any], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    	print("\n\nYYYUUUU Just to see we got here \n\n")
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
             try AVAudioSession.sharedInstance().setActive(true)
@@ -294,7 +295,26 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         print("Seeking to \(time) seconds")
         mediaWrapper.seek(to: time)
     }
-    
+
+    @objc(jumpTo:)
+    func jumpTo(to time: Double) {
+        print("Jump to \(time) seconds")
+    }
+
+
+    @objc(seekToPromise:resolver:rejecter:)
+    func seekPromise(to time: Double, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        print("Seeking to \(time) seconds")
+        mediaWrapper.seekPromise(to: time, callback: {[resolve, reject] (success: Bool, errorMsg: String) ->Void  in
+          if(success) {
+            resolve(NSNull.self)
+          } else {
+            reject("seek failed", errorMsg, nil)
+          }
+        })
+    }
+
+
     @objc(setVolume:)
     func setVolume(level: Float) {
         print("Setting volume to \(level)")
