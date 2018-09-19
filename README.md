@@ -42,4 +42,4 @@ This is a new interface function; it returns a Promise.
 
 When the promise `resolves` the seek operation is complete. If the seek operation fails (according to the AVFoundation documentation this can happen if another seek is issued before the first one is complete) the promise will be `rejected`.
 
-This type of seek operation __DOES NOT__ fire the `player-seek-complete` event.
+This type of seek operation __ALSO__ fire the `player-seek-complete` event.
