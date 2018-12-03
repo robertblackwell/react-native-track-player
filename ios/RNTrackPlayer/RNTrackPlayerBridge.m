@@ -4,7 +4,7 @@
 //
 //  Created by David Chavez on 7/1/17.
 //  Copyright © 2017 David Chavez. All rights reserved.
-//
+// modified by R Blackwell 12/3/2018
 
 #import "RNTrackPlayerBridge.h"
 #import <React/RCTBridgeModule.h>
@@ -61,10 +61,14 @@ RCT_EXTERN_METHOD(jumpTo:(double)time);
 
 RCT_EXTERN_METHOD(setVolume:(float)volume);
 
+
+
 RCT_EXTERN_METHOD(getVolume:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(setRate:(float)rate);
+/* make promise */
+
 
 RCT_EXTERN_METHOD(getRate:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);

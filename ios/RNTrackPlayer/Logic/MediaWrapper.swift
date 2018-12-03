@@ -24,7 +24,7 @@ class MediaWrapper: AudioPlayerDelegate {
     private var currentIndex: Int
     private let player: AudioPlayer
     private var trackImageTask: URLSessionDataTask?
-    
+
     var loadUnderway : Bool
     var loadCompletion : ((_ success: Bool, _ task: Track ) -> Void)?
     
