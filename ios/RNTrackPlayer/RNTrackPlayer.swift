@@ -288,16 +288,18 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         resolve(NSNull())
     }
 
-    @objc(seekTo:)
-    public func seek(to time: Double) {
+    @objc(seekTo:resolver:rejecter:)
+    public func seek(to time: Double, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Seeking to \(time) seconds")
         mediaWrapper.seek(to: time)
+        resolve(NSNull())
     }
 
-    @objc(setVolume:)
-    public func setVolume(level: Float) {
+    @objc(setVolume:resolver:rejecter:)
+    public func setVolume(level: Float, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Setting volume to \(level)")
         mediaWrapper.volume = level
+        resolve(NSNull())
     }
 
     @objc(getVolume:rejecter:)

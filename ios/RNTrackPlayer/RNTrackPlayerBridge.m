@@ -55,34 +55,26 @@ RCT_EXTERN_METHOD(pause:(RCTPromiseResolveBlock)resolve
 RCT_EXTERN_METHOD(stop:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
-// RCT_EXTERN_METHOD(reset);
+// RCT_EXTERN_METHOD(seekTo:(double)time);
 
-// RCT_EXTERN_METHOD(play);
-
-// RCT_EXTERN_METHOD(pause);
-
-// RCT_EXTERN_METHOD(stop);
-
-RCT_EXTERN_METHOD(seekTo:(double)time);
-
-RCT_EXTERN_METHOD(seekToPromise:(double)time
+RCT_EXTERN_METHOD(seekTo:(double)time
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 //    @objc(seekToPromise:resolver:rejecter:)
 
-RCT_EXTERN_METHOD(jumpTo:(double)time);
+// RCT_EXTERN_METHOD(setVolume:(float)volume);
 
-
-RCT_EXTERN_METHOD(setVolume:(float)volume);
-
-
+RCT_EXTERN_METHOD(setVolume:(float)volume
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(getVolume:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(setRate:(float)rate);
 /* make promise */
+
 
 
 RCT_EXTERN_METHOD(getRate:(RCTPromiseResolveBlock)resolve
@@ -109,5 +101,15 @@ RCT_EXTERN_METHOD(getPosition:(RCTPromiseResolveBlock)resolve
 
 RCT_EXTERN_METHOD(getState:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
+
+RCT_EXTERN_METHOD(jumpTo:(double)time);
+
+RCT_EXTERN_METHOD(seekToPromise:(double)time
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
+
+
+
+
 
 @end
