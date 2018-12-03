@@ -376,6 +376,10 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         sendEvent(withName: "remote-pause", body: nil)
     }
 
+    func remoteSentSeek(event: MPChangePlaybackPositionCommandEvent) {
+        sendEvent(withName: "remote-seek", body: ["position": event.positionTime])
+    }
+
     func remoteSentPlay() {
         sendEvent(withName: "remote-play", body: nil)
     }
