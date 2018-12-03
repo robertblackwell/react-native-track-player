@@ -269,6 +269,7 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     @objc(pause:rejecter:)
     public func pause(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Pausing playback")
+        JusToSeeIfWeGotIt();
         mediaWrapper.pause()
         resolve(NSNull())
     }
