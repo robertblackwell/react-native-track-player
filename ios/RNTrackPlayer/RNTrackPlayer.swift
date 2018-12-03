@@ -11,47 +11,41 @@ import MediaPlayer
 import AVFoundation
 
 @objc(RNTrackPlayer)
-class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
-  
+public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     private lazy var mediaWrapper: MediaWrapper = {
         let wrapper = MediaWrapper()
         wrapper.delegate = self
-        
+
         return wrapper
     }()
-    
+
     // MARK: - MediaWrapperDelegate Methods
-    
-    func playerUpdatedState() {
+
+    public func playerUpdatedState() {
         guard !isTesting else { return }
         sendEvent(withName: "playback-state", body: ["state": mediaWrapper.mappedState.rawValue])
     }
-    
-    func playerSwitchedTracks(trackId: String?, time: TimeInterval?, nextTrackId: String?) {
+
+    public func playerSwitchedTracks(trackId: String?, time: TimeInterval?, nextTrackId: String?) {
         guard !isTesting else { return }
         sendEvent(withName: "playback-track-changed", body: [
             "track": trackId,
             "position": time,
             "nextTrack": nextTrackId
-        ])
+            ])
     }
-    
-    func playerExhaustedQueue(trackId: String?, time: TimeInterval?) {
+
+    public func playerExhaustedQueue(trackId: String?, time: TimeInterval?) {
         guard !isTesting else { return }
         sendEvent(withName: "playback-queue-ended", body: [
             "track": trackId,
             "position": time,
-        ])
+            ])
     }
-    
-    func playbackFailed(error: Error) {
+
+    public func playbackFailed(error: Error) {
         guard !isTesting else { return }
         sendEvent(withName: "playback-error", body: ["error": error.localizedDescription])
-    }
-    
-    // RB signals seek completion with the same bool value that AVPlayer returned
-    func playerSeekCompleted(success : Bool) {
-        sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
     }
 
     private let isTesting = { () -> Bool in
@@ -63,14 +57,14 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             return false
         }
     }()
-    
-    
+
+
     // MARK: - Required Methods
-    
-    override open static func requiresMainQueueSetup() -> Bool {
+
+    override public static func requiresMainQueueSetup() -> Bool {
         return true;
     }
-    
+
     @objc(constantsToExport)
     override public func constantsToExport() -> [AnyHashable: Any] {
         return [
@@ -79,21 +73,26 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             "STATE_PAUSED": MediaWrapper.PlaybackState.paused.rawValue,
             "STATE_STOPPED": MediaWrapper.PlaybackState.stopped.rawValue,
             "STATE_BUFFERING": MediaWrapper.PlaybackState.buffering.rawValue,
-            
+
             "PITCH_ALGORITHM_LINEAR": PitchAlgorithm.linear.rawValue,
             "PITCH_ALGORITHM_MUSIC": PitchAlgorithm.music.rawValue,
             "PITCH_ALGORITHM_VOICE": PitchAlgorithm.voice.rawValue,
 
             "CAPABILITY_PLAY": Capability.play.rawValue,
+            "CAPABILITY_PLAY_FROM_ID": Capability.unsupported.rawValue,
+            "CAPABILITY_PLAY_FROM_SEARCH": Capability.unsupported.rawValue,
             "CAPABILITY_PAUSE": Capability.pause.rawValue,
             "CAPABILITY_STOP": Capability.stop.rawValue,
+            "CAPABILITY_SEEK_TO": Capability.seek.rawValue,
+            "CAPABILITY_SKIP": Capability.unsupported.rawValue,
             "CAPABILITY_SKIP_TO_NEXT": Capability.next.rawValue,
             "CAPABILITY_SKIP_TO_PREVIOUS": Capability.previous.rawValue,
+            "CAPABILITY_SET_RATING": Capability.unsupported.rawValue,
             "CAPABILITY_JUMP_FORWARD": Capability.jumpForward.rawValue,
-            "CAPABILITY_JUMP_BACKWARD": Capability.jumpBackward.rawValue
+            "CAPABILITY_JUMP_BACKWARD": Capability.jumpBackward.rawValue,
         ]
     }
-    
+
     @objc(supportedEvents)
     override public func supportedEvents() -> [String] {
         return [
@@ -101,8 +100,6 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             "playback-state",
             "playback-error",
             "playback-track-changed",
-            
-            "playback-seek-complete",
 
             "remote-stop",
             "remote-pause",
@@ -111,36 +108,39 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             "remote-previous",
             "remote-jump-forward",
             "remote-jump-backward",
+            "remote-seek",
+            "playback-seek-complete", // RB add
         ]
     }
-    
-    
+
+
     // MARK: - Bridged Methods
-    
+
     @objc(setupPlayer:resolver:rejecter:)
     public func setupPlayer(config: [String: Any], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    	print("\n\nYYYUUUU Just to see we got here \n\n")
+    	JusToSeeIfWeGotIt();
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             reject("setup_audio_session_failed", "Failed to setup audio session", error)
         }
-        
+
         resolve(NSNull())
     }
-    
+
     @objc(destroy)
     public func destroy() {
         print("Destroying player")
     }
-    
-    @objc(updateOptions:)
-    public func update(options: [String: Any]) {
+
+    @objc(updateOptions:resolver:rejecter:)
+    public func update(options: [String: Any], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         let remoteCenter = MPRemoteCommandCenter.shared()
         let castedCapabilities = (options["capabilities"] as? [String])
-        let capabilities = castedCapabilities?.flatMap { Capability(rawValue: $0) } ?? []
-        
+        let supportedCapabilities = castedCapabilities?.filter { Capability(rawValue: $0) != nil }
+        let capabilities = supportedCapabilities?.flatMap { Capability(rawValue: $0) } ?? []
+
         let enableStop = capabilities.contains(.stop)
         let enablePause = capabilities.contains(.pause)
         let enablePlay = capabilities.contains(.play)
@@ -148,38 +148,44 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         let enablePlayPrevious = capabilities.contains(.previous)
         let enableSkipForward = capabilities.contains(.jumpForward)
         let enableSkipBackward = capabilities.contains(.jumpBackward)
-        
+        let enableSeek = capabilities.contains(.seek)
+
         toggleRemoteHandler(command: remoteCenter.stopCommand, selector: #selector(remoteSentStop), enabled: enableStop)
         toggleRemoteHandler(command: remoteCenter.pauseCommand, selector: #selector(remoteSentPause), enabled: enablePause)
         toggleRemoteHandler(command: remoteCenter.playCommand, selector: #selector(remoteSentPlay), enabled: enablePlay)
         toggleRemoteHandler(command: remoteCenter.togglePlayPauseCommand, selector: #selector(remoteSentPlayPause), enabled: enablePause && enablePlay)
         toggleRemoteHandler(command: remoteCenter.nextTrackCommand, selector: #selector(remoteSentNext), enabled: enablePlayNext)
         toggleRemoteHandler(command: remoteCenter.previousTrackCommand, selector: #selector(remoteSentPrevious), enabled: enablePlayPrevious)
-        
-        
+        if #available(iOS 9.1, *) {
+            toggleRemoteHandler(command: remoteCenter.changePlaybackPositionCommand, selector: #selector(remoteSentSeek), enabled: enableSeek)
+        }
+
+
         remoteCenter.skipForwardCommand.preferredIntervals = [options["jumpInterval"] as? NSNumber ?? 15]
         remoteCenter.skipBackwardCommand.preferredIntervals = [options["jumpInterval"] as? NSNumber ?? 15]
         toggleRemoteHandler(command: remoteCenter.skipForwardCommand, selector: #selector(remoteSendSkipForward), enabled: enableSkipForward)
         toggleRemoteHandler(command: remoteCenter.skipBackwardCommand, selector: #selector(remoteSendSkipBackward), enabled: enableSkipBackward)
+
+        resolve(NSNull())
     }
-    
+
     @objc(add:before:resolver:rejecter:)
     public func add(trackDicts: [[String: Any]], before trackId: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         if let trackId = trackId, !mediaWrapper.queueContainsTrack(trackId: trackId) {
             reject("track_not_in_queue", "Given track ID was not found in queue", nil)
             return
         }
-        
+
         var tracks = [Track]()
         for trackDict in trackDicts {
             guard let track = Track(dictionary: trackDict) else {
                 reject("invalid_track_object", "Track is missing a required key", nil)
                 return
             }
-            
+
             tracks.append(track)
         }
-        
+
         print("Adding tracks:", tracks)
         mediaWrapper.addTracks(tracks, before: trackId, callback: {[resolve, reject] (success: Bool, errorMsg: String) ->Void  in
           if(success) {
@@ -188,30 +194,30 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             reject("call to add TRack failed", errorMsg, nil)
           }
         })
-//        resolve(NSNull())
     }
-    
+
     @objc(remove:resolver:rejecter:)
     public func remove(tracks ids: [String], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Removing tracks:", ids)
         mediaWrapper.removeTracks(ids: ids)
-        
+
         resolve(NSNull())
     }
-    
-    @objc(removeUpcomingTracks)
-    public func removeUpcomingTracks() {
+
+    @objc(removeUpcomingTracks:rejecter:)
+    public func removeUpcomingTracks(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Removing upcoming tracks")
         mediaWrapper.removeUpcomingTracks()
+        resolve(NSNull())
     }
-    
+
     @objc(skip:resolver:rejecter:)
     public func skip(to trackId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         if !mediaWrapper.queueContainsTrack(trackId: trackId) {
             reject("track_not_in_queue", "Given track ID was not found in queue", nil)
             return
         }
-        
+
         print("Skipping to track:", trackId)
         mediaWrapper.skipToTrack(id: trackId, callback: {[resolve, reject](_ success:Bool, _ errorMsg )->Void in
             if(success) {
@@ -221,14 +227,7 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             }
         })
     }
-    
-    ///
-    /// Skip to the next track in the queue and either play it or pause it depending on what the current track is doing.
-    /// If there is no current track it will be paused.
-    ///
-    /// when resolve is called the new track is ready to play
-    /// rejectr will be called with three args (errCode, errMsg, errorObj or nil) if the request fails
-    ///		and this includes if there is no next track - that is if we are at the end of the queue
+
     @objc(skipToNext:rejecter:)
     public func skipToNext(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         print("Skipping to next track")
@@ -240,14 +239,7 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             }
         })
     }
-    
-    ///
-    /// Skip to the previous track in the queue and either play it or pause it depending on what the current track is doing.
-    /// If there is no current track it will be paused.
-    ///
-    /// when resolve is called the new track is ready to play
-    /// rejectr will be called with three args (errCode, errMsg, errorObj or nil) if the request fails
-    ///        and this includes if there is no previous track - that is if we are at the beginning of the queue
+
     @objc(skipToPrevious:rejecter:)
     public func skipToPrevious(resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         print("Skipping to next track")
@@ -308,11 +300,12 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         resolve(mediaWrapper.volume)
     }
 
-    @objc(setRate:)
-    public func setRate(rate: Float) {
-        guard [.playing].contains(mediaWrapper.mappedState) else { return }
+    @objc(setRate:resolver:rejecter:)
+    public func setRate(rate: Float, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        guard [.buffering, .playing].contains(mediaWrapper.mappedState) else { return }
         print("Setting rate to \(rate)")
         mediaWrapper.rate = rate
+        resolve(NSNull())
     }
 
     @objc(getRate:rejecter:)
@@ -366,43 +359,43 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
 
     // MARK: - Private Helpers
     
-    func toggleRemoteHandler(command: MPRemoteCommand, selector: Selector, enabled: Bool) {
+    private func toggleRemoteHandler(command: MPRemoteCommand, selector: Selector, enabled: Bool) {
         command.removeTarget(self, action: selector)
         command.addTarget(self, action: selector)
         command.isEnabled = enabled
     }
-    
-    
+
+
     // MARK: - Remote Dynamic Methods
-    
+
     func remoteSentStop() {
         sendEvent(withName: "remote-stop", body: nil)
     }
-    
+
     func remoteSentPause() {
         sendEvent(withName: "remote-pause", body: nil)
     }
-    
+
     func remoteSentPlay() {
         sendEvent(withName: "remote-play", body: nil)
     }
-    
+
     func remoteSentNext() {
         sendEvent(withName: "remote-next", body: nil)
     }
-    
+
     func remoteSentPrevious() {
         sendEvent(withName: "remote-previous", body: nil)
     }
-    
+
     func remoteSendSkipForward(event: MPSkipIntervalCommandEvent) {
         sendEvent(withName: "remote-jump-forward", body: ["interval": event.interval])
     }
-    
+
     func remoteSendSkipBackward(event: MPSkipIntervalCommandEvent) {
         sendEvent(withName: "remote-jump-backward", body: ["interval": event.interval])
     }
-    
+
     func remoteSentPlayPause() {
         if mediaWrapper.mappedState == .paused {
             sendEvent(withName: "remote-play", body: nil)
@@ -411,14 +404,14 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         
         sendEvent(withName: "remote-pause", body: nil)
     }
-// MARK: - additions for seek complete event
+// MARK: - RB additions for seek complete event
 
     func playbackSeekCompleted(success: Bool) {
       NSLog("got here")
       sendEvent(withName : "playback-seek-complete", body: nil)
     }
 
-// MARK:: - additional interface functions
+// MARK:: - RB additional interface functions
 
     @objc(jumpTo:)
     public func jumpTo(to time: Double) {
@@ -436,6 +429,12 @@ class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             reject("seek failed", errorMsg, nil)
           }
         })
+    }
+
+
+// MARK:: - RB signals seek completion with the same bool value that AVPlayer returned
+    func playerSeekCompleted(success : Bool) {
+        sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
     }
 
 
