@@ -443,9 +443,4 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
     }
 
-    @objc(JustToSeeWeGotHere)
-    public func JustToSeeWeGotHere() {
-        print("JustToSeeWeGotHere");
-    }
-
 }
