@@ -10,6 +10,7 @@ import Foundation
 
 extension RNTrackPlayer {
     /// Returns the element at the specified index iff it is within bounds, otherwise nil.
+    @objc(JustToSeeWeGotHere)
     public func JusToSeeIfWeGotIt() {
 		print("TrackPlayer Interface extension got here");
     }

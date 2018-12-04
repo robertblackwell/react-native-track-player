@@ -409,6 +409,7 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
         
         sendEvent(withName: "remote-pause", body: nil)
     }
+
 // MARK: - RB additions for seek complete event
 
     func playbackSeekCompleted(success: Bool) {
@@ -441,6 +442,5 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     func playerSeekCompleted(success : Bool) {
         sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
     }
-
 
 }
