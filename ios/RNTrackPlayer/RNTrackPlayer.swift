@@ -118,7 +118,6 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
 
     @objc(setupPlayer:resolver:rejecter:)
     public func setupPlayer(config: [String: Any], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-    	JusToSeeIfWeGotIt();
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
             try AVAudioSession.sharedInstance().setActive(true)
@@ -269,7 +268,6 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
     @objc(pause:rejecter:)
     public func pause(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
         print("Pausing playback")
-        JusToSeeIfWeGotIt();
         mediaWrapper.pause()
         resolve(NSNull())
     }
@@ -359,7 +357,7 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
 
 
     // MARK: - Private Helpers
-    
+
     private func toggleRemoteHandler(command: MPRemoteCommand, selector: Selector, enabled: Bool) {
         command.removeTarget(self, action: selector)
         command.addTarget(self, action: selector)
@@ -419,12 +417,6 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
 
 // MARK:: - RB additional interface functions
 
-    @objc(jumpTo:)
-    public func jumpTo(to time: Double) {
-        print("Jump to \(time) seconds")
-    }
-
-
     @objc(seekToPromise:resolver:rejecter:)
     public func seekPromise(to time: Double, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         print("Seeking to \(time) seconds")
@@ -435,12 +427,6 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
             reject("seek failed", errorMsg, nil)
           }
         })
-    }
-
-
-// MARK:: - RB signals seek completion with the same bool value that AVPlayer returned
-    func xxplayerSeekCompleted(success : Bool) {
-        sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
     }
 
 }

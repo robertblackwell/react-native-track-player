@@ -38,7 +38,6 @@
 		9BFC1F7B1F619A09008795BF /* TrackEventProducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BFC1F7A1F619A09008795BF /* TrackEventProducer.swift */; };
 		9BFC1F7D1F619C0B008795BF /* AudioPlayer+TrackEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BFC1F7C1F619C0B008795BF /* AudioPlayer+TrackEvent.swift */; };
 		9BFC1FDD1F61A8E8008795BF /* Capabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BFC1FDC1F61A8E8008795BF /* Capabilities.swift */; };
-		D4F5994A21B5F56F00F97866 /* TrackPlayerEx.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F5994921B5F56F00F97866 /* TrackPlayerEx.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -88,7 +87,6 @@
 		9BFC1F7A1F619A09008795BF /* TrackEventProducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackEventProducer.swift; sourceTree = "<group>"; };
 		9BFC1F7C1F619C0B008795BF /* AudioPlayer+TrackEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AudioPlayer+TrackEvent.swift"; sourceTree = "<group>"; };
 		9BFC1FDC1F61A8E8008795BF /* Capabilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capabilities.swift; sourceTree = "<group>"; };
-		D4F5994921B5F56F00F97866 /* TrackPlayerEx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPlayerEx.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,7 +127,6 @@
 		9B0E282B1F07D76F00B71D2A /* RNTrackPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				D4F5994821B5F53F00F97866 /* brenwell */,
 				9BCFF5B72084B4CE0043C887 /* Extensions */,
 				9BFBA4D31F3DFA4B00453D3A /* Support */,
 				9B0AF8E71F22304200C50DC1 /* Logic */,
@@ -238,14 +235,6 @@
 			path = Support;
 			sourceTree = "<group>";
 		};
-		D4F5994821B5F53F00F97866 /* brenwell */ = {
-			isa = PBXGroup;
-			children = (
-				D4F5994921B5F56F00F97866 /* TrackPlayerEx.swift */,
-			);
-			path = brenwell;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -315,7 +304,6 @@
 				9BCFF5B92084B4E20043C887 /* Collections.swift in Sources */,
 				9BFC1F7B1F619A09008795BF /* TrackEventProducer.swift in Sources */,
 				9B8D9F7D1F40AF85003A0C0B /* EventProducer.swift in Sources */,
-				D4F5994A21B5F56F00F97866 /* TrackPlayerEx.swift in Sources */,
 				9B8D9F8C1F40AF8F003A0C0B /* AudioPlayer+NetworkEvent.swift in Sources */,
 				9B8D9F7A1F40AF7B003A0C0B /* CMTime+TimeIntervalValue.swift in Sources */,
 				9BFC1F7D1F619C0B008795BF /* AudioPlayer+TrackEvent.swift in Sources */,
