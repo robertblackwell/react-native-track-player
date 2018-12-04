@@ -439,7 +439,7 @@ public class RNTrackPlayer: RCTEventEmitter, MediaWrapperDelegate {
 
 
 // MARK:: - RB signals seek completion with the same bool value that AVPlayer returned
-    func playerSeekCompleted(success : Bool) {
+    func xxplayerSeekCompleted(success : Bool) {
         sendEvent(withName: "playback-seek-complete", body : ["finished" : success])
     }
 
